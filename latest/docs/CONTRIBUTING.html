@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>贡献指南（CONTRIBUTING） | MeowAutoChrome 文档 </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="贡献指南（CONTRIBUTING） | MeowAutoChrome 文档 ">
+    
+    
+      <link rel="shortcut icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../icon.png" alt="MeowAutoChrome">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="贡献指南contributing">贡献指南（CONTRIBUTING）</h1>
+
+<p>感谢你愿意为本项目贡献代码。以下为建议的流程与规范。</p>
+<h2 id="分支与提交规范">分支与提交规范</h2>
+<ul>
+<li>使用功能分支（feature/<em>）、修复分支（fix/</em>）或文档分支（docs/*）。</li>
+<li>提交信息建议采用 <code>type(scope): subject</code> 风格，例如 <code>feat(core): add runtime status endpoint</code>。
+<ul>
+<li>常见 type：<code>feat</code>, <code>fix</code>, <code>docs</code>, <code>chore</code>, <code>refactor</code>, <code>test</code>。</li>
+</ul>
+</li>
+</ul>
+<h2 id="提交前检查">提交前检查</h2>
+<ul>
+<li>本地构建通过：<code>dotnet build MeowAutoChrome.slnx</code>。</li>
+<li>如果修改了前端，确保 <code>MeowAutoChrome.Electron</code> 的构建/运行无误。</li>
+<li>添加或修改后端接口时请同步更新 <code>docs/API.md</code> 或 Swagger 文档（如启用）。</li>
+</ul>
+<h2 id="代码风格">代码风格</h2>
+<ul>
+<li>遵循仓库现有风格与 .NET 社区常用风格（命名、异常处理、依赖注入使用等）。</li>
+<li>为新增公共 API 或复杂逻辑编写单元测试（如适用）。</li>
+</ul>
+<h2 id="pr-流程">PR 流程</h2>
+<ol>
+<li>Fork 并在 feature 分支上提交变更。</li>
+<li>发起 Pull Request（PR），在描述中包含变更摘要、测试方式与影响范围。</li>
+<li>等待代码审查；根据审查意见修改并补充测试或文档。</li>
+</ol>
+<h2 id="代码所有权与发布">代码所有权与发布</h2>
+<ul>
+<li>重要变更需通知维护者并在 Release Plan 中记录影响（兼容性、迁移步骤）。</li>
+</ul>
+<h2 id="参与约定">参与约定</h2>
+<ul>
+<li>在公共仓库提交前，请确保不包含敏感信息或未授权的凭据。</li>
+<li>对外部依赖的引入请评估安全性与许可。</li>
+</ul>
+<p>感谢你对项目的贡献 —— 清晰的提交与详尽的 PR 描述会大大加快合并流程。</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/RoslynMeow/MeowAutoChrome/blob/master/docs/CONTRIBUTING.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  
+<script>
+// MeowVersionSwitcher
+(function () {
+  try {
+    var path = window.location.pathname;
+    var m = path.match(/^(.*?)\/(latest|\d+\.\d+\.\d+(?:[-+][^\/]*)?)\//);
+    if (!m) {
+      return;
+    }
+
+    var base = m[1];
+    var current = m[2];
+    var rest = path.substring(m[0].length);
+    if (!rest) {
+      rest = 'index.html';
+    }
+
+    fetch(base + '/versions.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        if (!Array.isArray(list)) {
+          list = [];
+        }
+
+        var options = ['latest'].concat(
+          list.filter(function (v) { return v !== 'latest'; })
+        );
+
+        var select = document.createElement('select');
+        options.forEach(function (v) {
+          var o = document.createElement('option');
+          o.value = v;
+          o.textContent = v === 'latest' ? 'latest (最新)' : v;
+          if (v === current) {
+            o.selected = true;
+          }
+          select.appendChild(o);
+        });
+
+        select.addEventListener('change', function () {
+          window.location.href = base + '/' + select.value + '/' + rest;
+        });
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:fixed;top:8px;right:16px;z-index:9999;background:#fff;border:1px solid #c8c8c8;border-radius:4px;padding:2px 6px;box-shadow:0 1px 3px rgba(0,0,0,.12);';
+        wrap.appendChild(select);
+        document.body.appendChild(wrap);
+      })
+      .catch(function () {});
+  } catch (e) {
+    /* ignore */
+  }
+})();
+
+</script>
+</body>
+</html>

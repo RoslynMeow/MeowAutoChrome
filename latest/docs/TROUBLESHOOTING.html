@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>常见问题与故障排查（TROUBLESHOOTING） | MeowAutoChrome 文档 </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="常见问题与故障排查（TROUBLESHOOTING） | MeowAutoChrome 文档 ">
+    
+    
+      <link rel="shortcut icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../icon.png" alt="MeowAutoChrome">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="常见问题与故障排查troubleshooting">常见问题与故障排查（TROUBLESHOOTING）</h1>
+
+<h2 id="插件未被发现或未加载">插件未被发现或未加载</h2>
+<ul>
+<li>症状：插件不会出现在列表或调用时被跳过。</li>
+<li>排查步骤：
+<ol>
+<li>确认插件编译目标与主机兼容（相同或兼容的 .NET 运行时）。</li>
+<li>检查插件是否包含 <code>MeowAutoChrome.Contracts</code> 或 <code>Microsoft.Playwright</code> 的私有副本；如包含，请移除，主机会复用宿主的这些程序集。</li>
+<li>查看 Core / PluginHost 的发现日志（插件发现快照 <code>PluginDiscoverySnapshot</code>）。</li>
+</ol>
+</li>
+</ul>
+<h2 id="playwright-浏览器安装运行问题">Playwright 浏览器安装/运行问题</h2>
+<ul>
+<li>无法启动浏览器：检查 Playwright 运行时是否已安装、浏览器缓存是否完整。</li>
+<li>若需要彻底清理并重装：可调用卸载端点（如 <code>/api/playwright/uninstall?all=true</code>）或手动删除运行时缓存目录，然后从线上或离线包重新安装。</li>
+</ul>
+<h2 id="signalr-连接失败">SignalR 连接失败</h2>
+<ul>
+<li>确认 WebAPI 正在运行且 Hub 地址正确。</li>
+<li>检查 CORS 与 HTTPS 设置，Electron 环境下通常使用本地地址无需跨域，但仍需确保 URL 与端口匹配。</li>
+</ul>
+<h2 id="构建发布失败">构建/发布失败</h2>
+<ul>
+<li>检查 SDK 版本与全局工具（.NET、Node.js）的兼容性。</li>
+<li>查看 <code>dotnet build</code> 与 <code>npm</code> 的错误输出，定位缺失依赖或编译错误。</li>
+</ul>
+<h2 id="日志不足以定位问题">日志不足以定位问题</h2>
+<ul>
+<li>增加后端/核心的日志等级以获得更多上下文。</li>
+<li>在本地环境中逐步重现问题：先单独运行 WebAPI，再用 Postman / curl 调用接口以复现后端错误；随后启动 Electron 以复现前端/连接问题。</li>
+</ul>
+<h2 id="常用修复命令">常用修复命令</h2>
+<pre><code class="lang-powershell"># 构建并清理
+dotnet clean
+dotnet build MeowAutoChrome.slnx
+
+# 卸载 Playwright（示例端点）
+curl -X POST &quot;http://localhost:5000/api/playwright/uninstall?all=true&quot;
+</code></pre>
+<h2 id="联系点与进一步诊断">联系点与进一步诊断</h2>
+<ul>
+<li>查看 <code>MeowAutoChrome.Core/Services/PlaywrightRuntimeService.cs</code> 与 <code>MeowAutoChrome.Core/Services/PluginHost</code> 的实现日志。</li>
+<li>若遇到权限或沙箱问题，检查运行用户权限与防火墙/杀毒软件对 Electron 或浏览器进程的拦截。</li>
+</ul>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/RoslynMeow/MeowAutoChrome/blob/master/docs/TROUBLESHOOTING.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  
+<script>
+// MeowVersionSwitcher
+(function () {
+  try {
+    var path = window.location.pathname;
+    var m = path.match(/^(.*?)\/(latest|\d+\.\d+\.\d+(?:[-+][^\/]*)?)\//);
+    if (!m) {
+      return;
+    }
+
+    var base = m[1];
+    var current = m[2];
+    var rest = path.substring(m[0].length);
+    if (!rest) {
+      rest = 'index.html';
+    }
+
+    fetch(base + '/versions.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        if (!Array.isArray(list)) {
+          list = [];
+        }
+
+        var options = ['latest'].concat(
+          list.filter(function (v) { return v !== 'latest'; })
+        );
+
+        var select = document.createElement('select');
+        options.forEach(function (v) {
+          var o = document.createElement('option');
+          o.value = v;
+          o.textContent = v === 'latest' ? 'latest (最新)' : v;
+          if (v === current) {
+            o.selected = true;
+          }
+          select.appendChild(o);
+        });
+
+        select.addEventListener('change', function () {
+          window.location.href = base + '/' + select.value + '/' + rest;
+        });
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:fixed;top:8px;right:16px;z-index:9999;background:#fff;border:1px solid #c8c8c8;border-radius:4px;padding:2px 6px;box-shadow:0 1px 3px rgba(0,0,0,.12);';
+        wrap.appendChild(select);
+        document.body.appendChild(wrap);
+      })
+      .catch(function () {});
+  } catch (e) {
+    /* ignore */
+  }
+})();
+
+</script>
+</body>
+</html>
