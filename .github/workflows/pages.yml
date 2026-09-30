@@ -7,24 +7,26 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  docs:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Checkout existing gh-pages
+      - name: Checkout docs storage branch
         uses: actions/checkout@v4
         continue-on-error: true
         with:
           ref: gh-pages
-          path: gh-pages
+          path: docs-store
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -48,50 +50,53 @@ jobs:
       - name: Inject version switcher
         run: python .github/scripts/inject_version_switcher.py _site .github/pages-root/version-switcher.js
 
-      - name: Prepare version list
-        id: versions
+      - name: Assemble site
         shell: bash
         run: |
-          current='${{ steps.version.outputs.value }}'
-          versions=""
-          if [ -d gh-pages ]; then
-            versions="$(ls gh-pages | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true)"
+          version='${{ steps.version.outputs.value }}'
+          mkdir -p public
+
+          # carry over previously published versions
+          if [ -d docs-store ]; then
+            rsync -a --exclude='.git' docs-store/ public/
           fi
-          versions="$(printf '%s\n%s\n' "$versions" "$current" \
-            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
-            | sort -uVr)"
-          json="$(printf '%s\n' "$versions" | grep -v '^$' | sed 's/.*/"&"/' | paste -sd, -)"
-          echo "json=[${json}]" >> "$GITHUB_OUTPUT"
-          echo "Versions: [${json}]"
 
-      - name: Deploy versioned docs
+          rm -rf "public/${version}" public/latest
+          mkdir -p "public/${version}" public/latest
+          cp -a _site/. "public/${version}/"
+          cp -a _site/. "public/latest/"
+
+          cp .github/pages-root/index.html public/index.html
+          cp .github/pages-root/version-switcher.js public/version-switcher.js
+          touch public/.nojekyll
+
+          versions="$(ls public | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true)"
+          json="$(printf '%s\n' "$versions" | grep -v '^$' | sort -uVr | sed 's/.*/"&"/' | paste -sd, -)"
+          printf '[%s]\n' "$json" > public/versions.json
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Save docs storage branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_site
-          destination_dir: ${{ steps.version.outputs.value }}
-          keep_files: true
+          publish_dir: ./public
+          keep_files: false
+          commit_message: 'docs: update pages store'
 
-      - name: Deploy latest docs
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_site
-          destination_dir: latest
-          keep_files: true
-
-      - name: Prepare root site
-        shell: bash
-        run: |
-          mkdir -p pages-root
-          cp .github/pages-root/index.html pages-root/index.html
-          cp .github/pages-root/version-switcher.js pages-root/version-switcher.js
-          printf '%s\n' '${{ steps.versions.outputs.json }}' > pages-root/versions.json
-          touch pages-root/.nojekyll
-
-      - name: Deploy root site
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./pages-root
-          keep_files: true
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
