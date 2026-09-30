@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>后端 API 与 SignalR 使用指南 | MeowAutoChrome 文档 </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="后端 API 与 SignalR 使用指南 | MeowAutoChrome 文档 ">
+    
+    
+      <link rel="shortcut icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../icon.png" alt="MeowAutoChrome">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="后端-api-与-signalr-使用指南">后端 API 与 SignalR 使用指南</h1>
+
+<p>本文件扩展并汇总 WebAPI 的常用端点、请求/响应模型和 SignalR 实时通道的使用示例。所有具体实现以代码为准（参见 Controllers 与 Models）。</p>
+<p>总体约定</p>
+<ul>
+<li>控制器位置： <a href="MeowAutoChrome.WebAPI/Controllers">MeowAutoChrome.WebAPI/Controllers</a></li>
+<li>路径前缀：所有 HTTP API 均以 <code>/api/</code> 开头（例如 <code>/api/playwright</code>、<code>/api/plugins</code>）。</li>
+<li>数据格式：请求/响应以 JSON 为主；文件上传使用 multipart/form-data；截图返回 image/png。</li>
+<li>实时通道：SignalR Hubs 映射在 <code>Program.cs</code>，路径为 <code>/browserHub</code>（浏览器交互）和 <code>/logHub</code>（日志推送）。</li>
+</ul>
+<p>API 组概览（快速导航）</p>
+<ul>
+<li>插件管理：<code>/api/plugins</code> — 上传、扫描、加载、卸载、执行插件动作与控制命令。</li>
+<li>Playwright 运行时：<code>/api/playwright</code> — 查询状态、安装、验证离线包、卸载。</li>
+<li>实例管理：<code>/api/instances</code> — 创建/预览/关闭实例，更新实例设置，切换 headless/viewport。</li>
+<li>标签页：<code>/api/tabs</code> — 新建/关闭/选择 tab。</li>
+<li>导航：<code>/api/navigation</code> — navigate/back/forward/reload。</li>
+<li>截图：<code>/api/screenshot</code> — 获取当前活动页面的 PNG 截图。</li>
+<li>推流（Screencast）：<code>/api/screencast</code> — 更新推流设置。</li>
+<li>日志：<code>/api/logs</code> — 读取最近日志、清空日志。</li>
+<li>状态：<code>/api/status</code> — 聚合运行时状态与轻量资源指标。</li>
+<li>配置：<code>/api/settings</code>、<code>/api/layout</code> — 读取/保存程序设置与布局。</li>
+</ul>
+<p>典型端点与示例</p>
+<ol>
+<li>插件管理（<code>/api/plugins</code>）</li>
+</ol>
+<ul>
+<li>上传插件：<code>POST /api/plugins/upload</code> — multipart/form-data，上传 zip/dll 文件；返回每个 DLL 的检测与加载结果（inspection + plugins + errors）。</li>
+<li>列表（当前目录）：<code>GET /api/plugins</code> — 返回插件目录扫描结果（<code>BrowserPluginCatalogResponseDto</code>）。</li>
+<li>读取已安装程序集：<code>GET /api/plugins/installed</code> — 列出插件程序集、启用状态与兼容性检查。</li>
+<li>触发扫描：<code>POST /api/plugins/refresh</code> — 强制扫描并返回新的目录响应。</li>
+<li>加载单个程序集：<code>POST /api/plugins/load</code> — Body: <code>{ &quot;path&quot;: &quot;&lt;assemblyPath&gt;&quot; }</code>。</li>
+<li>卸载/删除/启用/禁用：<code>POST /api/plugins/unload</code>, <code>POST /api/plugins/delete</code>, <code>POST /api/plugins/assembly-state</code>。</li>
+<li>调用动作（函数）：<code>POST /api/plugins/run</code> — Body: <code>{ &quot;pluginId&quot;:&quot;&lt;id&gt;&quot;, &quot;functionId&quot;:&quot;&lt;actionId&gt;&quot;, &quot;arguments&quot;:{ &quot;argName&quot;:&quot;value&quot; } }</code>。</li>
+<li>控制命令（start/stop/pause/resume）：<code>POST /api/plugins/control</code> — Body: <code>{ &quot;pluginId&quot;:&quot;&lt;id&gt;&quot;, &quot;command&quot;:&quot;start&quot;, &quot;arguments&quot;:{...} }</code>。</li>
+</ul>
+<p>示例：调用插件动作</p>
+<pre><code class="lang-bash">curl -X POST &quot;http://localhost:5000/api/plugins/run&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;pluginId&quot;:&quot;com.example.calc&quot;,&quot;functionId&quot;:&quot;Add&quot;,&quot;arguments&quot;:{&quot;a&quot;:&quot;2&quot;,&quot;b&quot;:&quot;3&quot;}}'
+</code></pre>
+<p>返回示例（简化）:</p>
+<pre><code class="lang-json">{ &quot;pluginId&quot;:&quot;com.example.calc&quot;, &quot;functionId&quot;:&quot;Add&quot;, &quot;message&quot;: null, &quot;state&quot;:&quot;Running&quot;, &quot;data&quot;: { &quot;Sum&quot;: 5 } }
+</code></pre>
+<ol>
+<li>Playwright 运行时管理（<code>/api/playwright</code>）</li>
+</ol>
+<ul>
+<li>获取状态：<code>GET /api/playwright/status</code> 返回 <code>PlaywrightRuntimeStatus</code> 字段的聚合视图（是否已安装、安装路径、已安装浏览器列表等）。</li>
+<li>校验离线包：<code>POST /api/playwright/validate-archive</code> Body: <code>{ &quot;archivePath&quot;:&quot;...&quot; }</code>。</li>
+<li>安装：<code>POST /api/playwright/install</code> 支持 query/body 指定 <code>archivePath</code> 或 <code>mode</code>（online/offline）。</li>
+<li>卸载：<code>POST /api/playwright/uninstall</code>（可使用 <code>?all=true</code> 做完全卸载），或 <code>POST /api/playwright/uninstall-browser</code> 指定 <code>Browser</code> 与 <code>RuntimeSource</code>。</li>
+</ul>
+<p>示例：查询并卸载</p>
+<pre><code class="lang-bash">curl &quot;http://localhost:5000/api/playwright/status&quot;
+curl -X POST &quot;http://localhost:5000/api/playwright/uninstall?all=true&quot;
+</code></pre>
+<ol>
+<li>实例与标签页（<code>/api/instances</code>, <code>/api/tabs</code>）</li>
+</ol>
+<ul>
+<li>创建实例：<code>POST /api/instances</code> Body: <code>BrowserCreateInstanceRequest</code>（OwnerPluginId、DisplayName、UserDataDirectory、PreviewInstanceId）。</li>
+<li>预览新实例 ID：<code>GET /api/instances/preview?ownerPluginId=...&amp;userDataDirectoryRoot=...</code>。</li>
+<li>读取/更新实例设置：<code>GET /api/instances/settings?instanceId=...</code> / <code>POST /api/instances/settings</code>（Body: <code>BrowserInstanceSettingsUpdateRequest</code>）。</li>
+<li>关闭实例：<code>POST /api/instances/close</code> Body: <code>BrowserCloseInstanceRequest</code>。</li>
+<li>新建标签页：<code>POST /api/tabs/new</code> Body: <code>BrowserCreateTabRequest</code>（可选 instanceId 与 url）。</li>
+<li>关闭/选择标签页：<code>POST /api/tabs/close</code>、<code>POST /api/tabs/select</code>。</li>
+</ul>
+<ol>
+<li>导航（<code>/api/navigation</code>）</li>
+</ol>
+<ul>
+<li>导航到 URL：<code>POST /api/navigation/navigate</code> Body: <code>BrowserNavigateRequest { &quot;url&quot;:&quot;...&quot; }</code>。</li>
+<li>前进/后退/刷新：<code>POST /api/navigation/forward|back|reload</code>。</li>
+</ul>
+<ol>
+<li>截图与推流</li>
+</ol>
+<ul>
+<li>截图：<code>GET /api/screenshot</code> 返回 <code>image/png</code>，当没有活动实例时返回 400 或 404。</li>
+<li>推流设置：<code>POST /api/screencast/settings</code> Body: <code>ScreencastSettingsRequest { enabled,maxWidth,maxHeight,frameIntervalMs }</code>。</li>
+</ul>
+<ol>
+<li>状态与资源（<code>/api/status</code>）</li>
+</ol>
+<ul>
+<li>获取完整状态：<code>GET /api/status</code> 返回 <code>BrowserStatusResponse</code>，包含当前 URL、标签页列表、资源指标和 screencast 状态。</li>
+<li>轻量指标：<code>GET /api/status/metrics</code> 返回 CPU/内存快照（<code>BrowserResourceMetricsResponse</code>）。</li>
+</ul>
+<ol>
+<li>日志与设置</li>
+</ol>
+<ul>
+<li>读取日志：<code>GET /api/logs/content</code> 返回最近日志条目（<code>LogEntryViewModel</code> 列表）。</li>
+<li>清空日志：<code>POST /api/logs/clear</code>。</li>
+<li>读取设置：<code>GET /api/settings</code>。</li>
+<li>自动保存设置（表单）：<code>POST /api/settings/autosave</code>（<code>ProgramSettingsViewModel</code> 以 form-data 提交）。</li>
+</ul>
+<ol>
+<li>布局：<code>POST /api/layout</code> 保存界面布局（<code>BrowserLayoutSettingsRequest</code>）。</li>
+</ol>
+<p>请求/响应模型参考（重要 DTO）</p>
+<ul>
+<li>插件目录响应：<code>BrowserPluginCatalogResponseDto</code>（参见 <a href="MeowAutoChrome.WebAPI/Models/PluginDto.cs">MeowAutoChrome.WebAPI/Models/PluginDto.cs</a>）</li>
+<li>实例/视图 DTO：<code>BrowserInstanceInfoDto</code>, <code>BrowserInstanceSettingsResponseDto</code>, <code>BrowserTabInfoDto</code>（参见 <a href="MeowAutoChrome.WebAPI/Models">MeowAutoChrome.WebAPI/Models</a>）。</li>
+<li>状态/指标 DTO：<code>BrowserStatusResponse</code>, <code>BrowserResourceMetricsResponse</code>（详见 <code>BrowserControlModels.cs</code>）。</li>
+</ul>
+<p>SignalR Hubs（实时通道）</p>
+<ul>
+<li>映射：<code>/browserHub</code>（浏览器交互）与 <code>/logHub</code>（日志推送），见 <a href="MeowAutoChrome.WebAPI/Program.cs">MeowAutoChrome.WebAPI/Program.cs</a>。</li>
+<li><code>/browserHub</code>（Hub 类型 <code>BrowserHub</code>）
+<ul>
+<li>客户端可调用方法（由前端发起）：<code>SendMouseEvent(MouseEventData)</code>、<code>SendKeyEvent(KeyEventData)</code>，服务器会将事件注入当前浏览器实例。消息格式请参考 <code>MeowAutoChrome.WebAPI.Models.InputEvents</code>。</li>
+<li>服务器推送给客户端的回调（<code>IBrowserClient</code>）：<code>ReceiveFrame(string data, int? width, int? height)</code>、<code>ScreencastDisabled()</code>。</li>
+</ul>
+</li>
+<li><code>/logHub</code>（Hub 类型 <code>LogHub</code>）
+<ul>
+<li>服务器通过 <code>ILogClient.ReceiveLog(LogMessageDto)</code> 向客户端推送新增日志条目。</li>
+</ul>
+</li>
+</ul>
+<p>错误处理与调试要点</p>
+<ul>
+<li>常见返回码：<code>400</code>（参数错误）、<code>404</code>（资源缺失）、<code>500</code>（服务器异常）。API 在异常情况下通常返回 <code>{ error: &quot;message&quot; }</code> 或 ProblemDetails。</li>
+<li>文件上传：<code>/api/plugins/upload</code> 使用 multipart/form-data，注意大小/文件数量受 <code>ProgramSettings</code> 限制。</li>
+<li>若需快速查看所有注册端点，可访问诊断端点 <code>GET /__endpoints</code>（仅用于开发/诊断）。</li>
+</ul>
+<p>生成文档与 Swagger</p>
+<ul>
+<li>如果需要 OpenAPI/Swagger，请在 <a href="MeowAutoChrome.WebAPI/Program.cs">MeowAutoChrome.WebAPI/Program.cs</a> 中启用并配置 Swagger 中间件以自动生成接口文档。</li>
+</ul>
+<p>参考源码位置</p>
+<ul>
+<li>控制器： <a href="MeowAutoChrome.WebAPI/Controllers">MeowAutoChrome.WebAPI/Controllers</a></li>
+<li>DTO： <a href="MeowAutoChrome.WebAPI/Models">MeowAutoChrome.WebAPI/Models</a></li>
+<li>插件发现/执行： <a href="MeowAutoChrome.Core/Services/PluginHost">MeowAutoChrome.Core/Services/PluginHost</a></li>
+<li>Playwright 管理： <a href="MeowAutoChrome.Core/Services/PlaywrightRuntimeService.cs">MeowAutoChrome.Core/Services/PlaywrightRuntimeService.cs</a></li>
+</ul>
+<p>如需我把上述内容进一步生成为可打印的 API 参考（单页或 OpenAPI spec），我可以继续为你导出。</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/RoslynMeow/MeowAutoChrome/blob/master/docs/API.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  
+<script>
+// MeowVersionSwitcher
+(function () {
+  try {
+    var path = window.location.pathname;
+    var m = path.match(/^(.*?)\/(latest|\d+\.\d+\.\d+(?:[-+][^\/]*)?)\//);
+    if (!m) {
+      return;
+    }
+
+    var base = m[1];
+    var current = m[2];
+    var rest = path.substring(m[0].length);
+    if (!rest) {
+      rest = 'index.html';
+    }
+
+    fetch(base + '/versions.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        if (!Array.isArray(list)) {
+          list = [];
+        }
+
+        var options = ['latest'].concat(
+          list.filter(function (v) { return v !== 'latest'; })
+        );
+
+        var select = document.createElement('select');
+        options.forEach(function (v) {
+          var o = document.createElement('option');
+          o.value = v;
+          o.textContent = v === 'latest' ? 'latest (最新)' : v;
+          if (v === current) {
+            o.selected = true;
+          }
+          select.appendChild(o);
+        });
+
+        select.addEventListener('change', function () {
+          window.location.href = base + '/' + select.value + '/' + rest;
+        });
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:fixed;top:8px;right:16px;z-index:9999;background:#fff;border:1px solid #c8c8c8;border-radius:4px;padding:2px 6px;box-shadow:0 1px 3px rgba(0,0,0,.12);';
+        wrap.appendChild(select);
+        document.body.appendChild(wrap);
+      })
+      .catch(function () {});
+  } catch (e) {
+    /* ignore */
+  }
+})();
+
+</script>
+</body>
+</html>

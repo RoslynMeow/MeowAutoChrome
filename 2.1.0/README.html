@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>主要组件 | MeowAutoChrome 文档 </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="主要组件 | MeowAutoChrome 文档 ">
+    
+    
+      <link rel="shortcut icon" href="favicon.ico">
+      <link rel="stylesheet" href="styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="styles/docfx.css">
+      <link rel="stylesheet" href="styles/main.css">
+      <meta property="docfx:navrel" content="toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="index.html">
+                <img id="logo" class="svg" src="icon.png" alt="MeowAutoChrome">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="主要组件">主要组件</h1>
+
+<ul>
+<li>WebAPI（<a href="MeowAutoChrome.WebAPI">MeowAutoChrome.WebAPI</a>）：后端 HTTP API 与 SignalR Hub。</li>
+<li>Core（<a href="MeowAutoChrome.Core">MeowAutoChrome.Core</a>）：业务逻辑、Playwright 运行时管理、插件主机。</li>
+<li>Electron UI（<a href="MeowAutoChrome.Electron">MeowAutoChrome.Electron</a>）：桌面前端，通常与本地 WebAPI 配合运行。</li>
+<li>Contracts（<a href="MeowAutoChrome.Contracts">MeowAutoChrome.Contracts</a>）：插件接口、基类与 attribute 定义。</li>
+<li>ExamplePlugin（<a href="MeowAutoChrome.ExamplePlugin">MeowAutoChrome.ExamplePlugin</a>）：参考插件示例。</li>
+</ul>
+<p><strong>快速开始（开发）</strong>
+在 Windows PowerShell 执行：</p>
+<pre><code class="lang-powershell"># 构建整个解决方案
+dotnet build MeowAutoChrome.slnx
+
+# 运行 WebAPI（开发）
+dotnet run --project MeowAutoChrome.WebAPI/MeowAutoChrome.WebAPI.csproj
+
+# 或使用仓库提供的脚本（通常自动协调服务）
+.\dev.ps1
+
+# 打包示例脚本
+.\pack.ps1
+</code></pre>
+<p>有关 Electron 命令请查看 <a href="MeowAutoChrome.Electron/package.json">MeowAutoChrome.Electron/package.json</a>。</p>
+<h2 id="文档结构">文档结构</h2>
+<ul>
+<li>README.md（本文件）：总体说明与快速上手。</li>
+<li>docs/ARCHITECTURE.md：系统架构、运行原理、组件交互。</li>
+<li>docs/FOLDERS.md：仓库各目录用途说明。</li>
+<li>docs/API.md：后端 HTTP 与 SignalR 使用说明与示例。</li>
+<li>docs/PLUGINS.md：插件开发、打包与加载规则。</li>
+<li>docs/SETUP.md：环境与依赖安装说明。</li>
+<li>docs/USAGE.md：运行、调试与打包流程。</li>
+<li>docs/TROUBLESHOOTING.md：常见问题与排查步骤。</li>
+<li>docs/CONTRIBUTING.md：贡献准则与发布流程。</li>
+<li>docs/RELEASE_PLAN.md：发布检查表与步骤。</li>
+<li>docs/SECURITY.md：安全与依赖管理建议。</li>
+</ul>
+<p>继续阅读目录下的其它文档以获取详细信息。</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/RoslynMeow/MeowAutoChrome/blob/master/README.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="styles/docfx.js"></script>
+    <script type="text/javascript" src="styles/main.js"></script>
+  
+<script>
+// MeowVersionSwitcher
+(function () {
+  try {
+    var path = window.location.pathname;
+    var m = path.match(/^(.*?)\/(latest|\d+\.\d+\.\d+(?:[-+][^\/]*)?)\//);
+    if (!m) {
+      return;
+    }
+
+    var base = m[1];
+    var current = m[2];
+    var rest = path.substring(m[0].length);
+    if (!rest) {
+      rest = 'index.html';
+    }
+
+    fetch(base + '/versions.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        if (!Array.isArray(list)) {
+          list = [];
+        }
+
+        var options = ['latest'].concat(
+          list.filter(function (v) { return v !== 'latest'; })
+        );
+
+        var select = document.createElement('select');
+        options.forEach(function (v) {
+          var o = document.createElement('option');
+          o.value = v;
+          o.textContent = v === 'latest' ? 'latest (最新)' : v;
+          if (v === current) {
+            o.selected = true;
+          }
+          select.appendChild(o);
+        });
+
+        select.addEventListener('change', function () {
+          window.location.href = base + '/' + select.value + '/' + rest;
+        });
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:fixed;top:8px;right:16px;z-index:9999;background:#fff;border:1px solid #c8c8c8;border-radius:4px;padding:2px 6px;box-shadow:0 1px 3px rgba(0,0,0,.12);';
+        wrap.appendChild(select);
+        document.body.appendChild(wrap);
+      })
+      .catch(function () {});
+  } catch (e) {
+    /* ignore */
+  }
+})();
+
+</script>
+</body>
+</html>

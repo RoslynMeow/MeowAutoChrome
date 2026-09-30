@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>系统架构与运行原理 | MeowAutoChrome 文档 </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="系统架构与运行原理 | MeowAutoChrome 文档 ">
+    
+    
+      <link rel="shortcut icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../icon.png" alt="MeowAutoChrome">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="系统架构与运行原理">系统架构与运行原理</h1>
+
+<h2 id="概览">概览</h2>
+<p>MeowAutoChrome 采用前端（Electron）与后端服务（.NET WebAPI + Core 服务）分离的架构：</p>
+<ul>
+<li>Electron 负责 UI、用户交互和本地安装/调用界面。</li>
+<li>WebAPI 提供 HTTP/S 和 SignalR 接口，承载运行时管理、插件加载、日志上报等服务。</li>
+<li>Core 层实现业务逻辑、Playwright 运行时控制与插件主机（Plugin Host）。</li>
+</ul>
+<p>组件之间通过 HTTP/SignalR 与本地进程通信，Playwright 实例由 Core 层托管以实现多浏览器会话与统一生命周期管理。</p>
+<h2 id="主要组件职责">主要组件职责</h2>
+<ul>
+<li><code>MeowAutoChrome.Electron</code>：桌面客户端，启动/安装/配置、UI 展示；与本地 WebAPI 通信。</li>
+<li><code>MeowAutoChrome.WebAPI</code>：暴露 REST API 与 SignalR hubs，管理远程调用、状态查询、安装/卸载流程。</li>
+<li><code>MeowAutoChrome.Core</code>：核心业务与运行时，包含 <code>PlaywrightInstance</code>、<code>PlaywrightRuntimeService</code>、<code>BrowserInstanceManagerCore</code> 等类，用于启动/管理浏览器实例与插件运行环境。</li>
+<li><code>MeowAutoChrome.Contracts</code>：定义插件接口（<code>IPlugin</code> 等）、基类（<code>PluginBase</code>）、以及 attribute（如 <code>PActionAttribute</code>、<code>PluginAttribute</code> 等）。</li>
+</ul>
+<h2 id="数据与控制流高层">数据与控制流（高层）</h2>
+<ol>
+<li>用户在 Electron UI 发起操作（例如：执行插件动作、安装浏览器运行时）。</li>
+<li>Electron 将请求发送到本地 WebAPI（HTTP 或通过 SignalR 实时通道）。</li>
+<li>WebAPI 将请求分派到 Core 层服务（依赖注入），Core 调用 Playwright 运行时或插件主机执行操作。</li>
+<li>运行结果与日志通过 WebAPI/SignalR 回传 Electron 并记录在日志系统中。</li>
+</ol>
+<h2 id="插件与隔离策略">插件与隔离策略</h2>
+<ul>
+<li>插件以单独 Assembly 加载。为避免类型标识（type identity）冲突，<code>PluginLoadContext</code> 必须重用主机已加载的 <code>MeowAutoChrome.Contracts</code> 和 <code>Microsoft.Playwright</code> 程序集；加载插件本地副本会导致 <code>IPlugin</code> 可分配性检查失败，从而被跳过。</li>
+<li>插件运行在受控的主机上下文（Plugin Host）中，主机负责生命周期、权限与输入/输出约定。</li>
+</ul>
+<h2 id="playwright-运行时与打包模式">Playwright 运行时与打包模式</h2>
+<ul>
+<li>仓库支持在线/离线两种 Playwright 运行时安装包策略：脚本与打包流程（例如 <code>package-app.ps1</code>）区分 <code>PackageMode=online|offline|both</code>。offline 包含仓库根目录的 <code>chrome-win64.zip</code>，用于离线部署。</li>
+<li>卸载流程区分来源（bundled / managed / global）。存在完整卸载端点（例如 <code>/api/playwright/uninstall?all=true</code>）用于执行 <code>playwright uninstall --all</code> 并删除各类浏览器缓存目录。</li>
+</ul>
+<h2 id="可视化示意">可视化（示意）</h2>
+<ul>
+<li>Electron &lt;--&gt; WebAPI (HTTP/SignalR)</li>
+<li>WebAPI --&gt; Core 服务（DI）</li>
+<li>Core --&gt; Playwright runtime / Plugin Host</li>
+</ul>
+<h2 id="设计要点">设计要点</h2>
+<ul>
+<li>前后端分离，WebAPI 可单独运行用于自动化任务与 CI。</li>
+<li>插件隔离 + 共享 Contracts 以确保版本与类型的一致性。</li>
+<li>提供线上/离线打包以支持离线环境下的浏览器安装。</li>
+</ul>
+<blockquote>
+<p>参考代码位置：</p>
+<ul>
+<li><a href="MeowAutoChrome.Core/Services/PlaywrightRuntimeService.cs">MeowAutoChrome.Core/PlaywrightRuntimeService.cs</a></li>
+<li><a href="MeowAutoChrome.Core/Services/PluginHost">MeowAutoChrome.Core/PluginHost</a></li>
+<li><a href="MeowAutoChrome.WebAPI/Controllers">MeowAutoChrome.WebAPI/Controllers</a></li>
+<li><a href="MeowAutoChrome.Contracts">MeowAutoChrome.Contracts</a></li>
+</ul>
+</blockquote>
+<p>如需扩展架构图，请把 PlantUML/mermaid 源文件放入 docs/diagrams/ 并在此引用。</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/RoslynMeow/MeowAutoChrome/blob/master/docs/ARCHITECTURE.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  
+<script>
+// MeowVersionSwitcher
+(function () {
+  try {
+    var path = window.location.pathname;
+    var m = path.match(/^(.*?)\/(latest|\d+\.\d+\.\d+(?:[-+][^\/]*)?)\//);
+    if (!m) {
+      return;
+    }
+
+    var base = m[1];
+    var current = m[2];
+    var rest = path.substring(m[0].length);
+    if (!rest) {
+      rest = 'index.html';
+    }
+
+    fetch(base + '/versions.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        if (!Array.isArray(list)) {
+          list = [];
+        }
+
+        var options = ['latest'].concat(
+          list.filter(function (v) { return v !== 'latest'; })
+        );
+
+        var select = document.createElement('select');
+        options.forEach(function (v) {
+          var o = document.createElement('option');
+          o.value = v;
+          o.textContent = v === 'latest' ? 'latest (最新)' : v;
+          if (v === current) {
+            o.selected = true;
+          }
+          select.appendChild(o);
+        });
+
+        select.addEventListener('change', function () {
+          window.location.href = base + '/' + select.value + '/' + rest;
+        });
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:fixed;top:8px;right:16px;z-index:9999;background:#fff;border:1px solid #c8c8c8;border-radius:4px;padding:2px 6px;box-shadow:0 1px 3px rgba(0,0,0,.12);';
+        wrap.appendChild(select);
+        document.body.appendChild(wrap);
+      })
+      .catch(function () {});
+  } catch (e) {
+    /* ignore */
+  }
+})();
+
+</script>
+</body>
+</html>

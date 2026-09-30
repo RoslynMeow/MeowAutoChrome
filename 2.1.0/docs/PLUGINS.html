@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>插件开发与加载指南 | MeowAutoChrome 文档 </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="插件开发与加载指南 | MeowAutoChrome 文档 ">
+    
+    
+      <link rel="shortcut icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../icon.png" alt="MeowAutoChrome">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="插件开发与加载指南">插件开发与加载指南</h1>
+
+<p>本章为插件作者提供详尽的参考：如何声明插件、定义动作与输入、参数如何绑定、返回值如何规范化、以及运行时可调用的宿主能力和打包注意事项。</p>
+<p>核心约定与位置</p>
+<ul>
+<li>插件契约（接口/基类/attribute）位于 <code>MeowAutoChrome.Contracts</code>，关键文件：
+<ul>
+<li><code>IPlugin.cs</code>, <code>PluginBase.cs</code>, <code>PluginPrimitives.cs</code></li>
+<li>属性定义在 <code>MeowAutoChrome.Contracts/Attributes/</code>（<code>PluginAttribute</code>, <code>PActionAttribute</code>, <code>PInputAttribute</code>, <code>PluginExportAttribute</code>）</li>
+</ul>
+</li>
+<li>插件发现在 Core：<code>MeowAutoChrome.Core/Services/PluginDiscovery</code>（类型检测、参数元数据生成）</li>
+<li>插件加载/执行在 Core 的 PluginHost 实现：<code>MeowAutoChrome.Core/Services/PluginHost</code>（<code>BrowserPluginHostCore</code>, <code>PluginExecutionService</code>, <code>PluginExecutor</code>, <code>PluginLoadContext</code> 等）</li>
+</ul>
+<p>一、如何声明插件（类型级别）</p>
+<ul>
+<li>使用 <code>PluginAttribute</code> 将类标识为插件：</li>
+</ul>
+<pre><code class="lang-csharp">using MeowAutoChrome.Contracts.Attributes;
+
+[Plugin(&quot;com.example.helloworld&quot;, &quot;Hello World&quot;, &quot;示例插件&quot;)] 
+public class HelloWorldPlugin : PluginBase
+{
+        // 实现生命周期方法或动作
+}
+</code></pre>
+<p>二、动作（Action）声明 — <code>PActionAttribute</code></p>
+<ul>
+<li>使用 <code>PActionAttribute</code> 标注方法以将其暴露为插件动作。属性可选字段：<code>Id</code>, <code>Name</code>, <code>Description</code>。</li>
+<li>若未提供 <code>Id</code>，系统会使用方法名作为 action id，并在必要时自动去重（附加后缀）。</li>
+</ul>
+<p>示例（多种返回形态）：</p>
+<pre><code class="lang-csharp">using MeowAutoChrome.Contracts;
+using MeowAutoChrome.Contracts.Attributes;
+
+[Plugin(&quot;com.example.hello&quot;,&quot;Hello Plugin&quot;)]
+public class HelloPlugin : PluginBase
+{
+        [PAction(Name = &quot;Say Hello&quot;, Description = &quot;返回问候文本&quot;)]
+        public IResult SayHello(string name) =&gt; Result.Ok(new { Text = $&quot;Hello {name}&quot; });
+
+        [PAction]
+        public async Task&lt;IResult&gt; DoAsyncWork(int times)
+        {
+                for (int i = 0; i &lt; times; i++) await Task.Delay(10);
+                return Result.Ok(new { Count = times });
+        }
+
+        [PAction(Id = &quot;get_title&quot;)]
+        public async Task&lt;string&gt; GetTitle() // 返回 Task&lt;T&gt; 会被宿主包装为 Result.Data
+        {
+                await Task.Delay(1);
+                return &quot;title&quot;;
+        }
+}
+</code></pre>
+<p>三、参数声明与 <code>PInputAttribute</code></p>
+<ul>
+<li><code>PInputAttribute</code> 可用于方法参数或属性上以提供 UI 元数据：
+<ul>
+<li><code>Name</code>：参数键名（通常等于方法参数名）</li>
+<li><code>Label</code>：显示标签</li>
+<li><code>Description</code>：说明</li>
+<li><code>DefaultValue</code>：默认值（字符串形式）</li>
+<li><code>Required</code>：是否必填</li>
+<li><code>InputType</code>：类型提示（例如 <code>text</code>, <code>password</code>, <code>select</code>, <code>textarea</code>）</li>
+<li><code>Multiline</code>、<code>Rows</code>：用于 textarea</li>
+</ul>
+</li>
+</ul>
+<p>示例：</p>
+<pre><code class="lang-csharp">[PAction]
+public IResult Login(
+        [PInput(Label=&quot;用户名&quot;, Required=true)] string username,
+        [PInput(Label=&quot;密码&quot;, InputType=&quot;password&quot;)] string password)
+{
+        // ...
+}
+</code></pre>
+<p>四、参数绑定规则（运行时）</p>
+<ul>
+<li>调用时传递的参数为字符串键值对（<code>Dictionary&lt;string,string?&gt;</code>），主机通过参数名与方法参数匹配：
+<ul>
+<li>参数键使用方法参数名（<code>parameter.Name</code>）。</li>
+<li>若方法参数类型可分配为 <code>IPluginContext</code>，宿主会注入当前 <code>IPluginContext</code> 实例（无需在调用参数中提供）。</li>
+</ul>
+</li>
+<li>类型转换支持（字符串 -&gt; 目标类型）：
+<ul>
+<li><code>string</code>：原值</li>
+<li><code>Guid</code>：<code>Guid.Parse</code></li>
+<li><code>DateTime</code> / <code>DateTimeOffset</code>：ISO 风格解析（CultureInvariant）</li>
+<li><code>enum</code>：按名称解析（忽略大小写）</li>
+<li>数值类型：使用 <code>Convert.ChangeType</code></li>
+<li>带 ? 的可空类型：当字符串为空/空白时会被转换为 <code>null</code></li>
+<li>若未提供参数且方法参数有默认值，则使用默认值；否则：值类型使用默认构造，引用类型为 <code>null</code>。</li>
+</ul>
+</li>
+</ul>
+<p>（实现细节位于 <code>MeowAutoChrome.Core/Services/PluginDiscovery/PluginParameterBinder.cs</code>）</p>
+<p>五、返回值规范化（宿主如何处理方法返回）</p>
+<ul>
+<li>宿主接受任意返回形态并进行规范化处理（见 <code>PluginExecutionService</code>）：
+<ul>
+<li><code>Task&lt;IResult&gt;</code>：等待并返回其 IResult</li>
+<li><code>IResult</code>：直接使用</li>
+<li><code>Task</code>（无结果）：等待完成，返回成功 <code>Result.Ok()</code></li>
+<li><code>Task&lt;T&gt;</code>：等待完成后，若 <code>T</code> 实现 <code>IResult</code> 则直接使用，否则将 <code>T</code> 包装为 <code>Result.Data</code></li>
+<li>同步返回 <code>T</code>：若为 <code>IResult</code> 则直接使用，否则包装为 <code>Result</code>（Data = 返回对象）</li>
+</ul>
+</li>
+</ul>
+<p>六、生命周期方法与宿主注入</p>
+<ul>
+<li>插件应实现或继承 <code>PluginBase</code>，并实现生命周期方法：
+<ul>
+<li><code>StartAsync()</code>, <code>StopAsync()</code>, <code>PauseAsync()</code>, <code>ResumeAsync()</code>（均返回 <code>Task&lt;IResult&gt;</code>）</li>
+<li><code>SupportsPause</code> 属性控制宿主是否允许 pause/resume</li>
+</ul>
+</li>
+<li>在动作或生命周期方法执行期间，宿主会将 <code>HostContext</code> 注入到插件实例（<code>PluginBase.HostContext</code> 可访问），并在执行结束后清理。</li>
+</ul>
+<p>七、宿主能力（通过 <code>IPluginContext</code> / <code>IPluginHost</code> 暴露）</p>
+<ul>
+<li>常见可用能力（<code>PluginBase</code> 提供便捷封装）：
+<ul>
+<li>日志写入：<code>Host.WriteLogAsync(...)</code> 或 <code>WriteLogAsync(...)</code></li>
+<li>发布运行中消息/Toast：<code>PublishUpdateAsync</code> / <code>ToastAsync</code>（<code>PluginBase.MessageAsync</code> / <code>ToastAsync</code> 封装）</li>
+<li>浏览器实例管理：<code>CreateBrowserInstanceAsync</code>, <code>CloseBrowserInstanceAsync</code>, <code>SelectBrowserInstanceAsync</code>（<code>BrowserCreationOptions</code> 可指定 <code>BrowserType</code>, <code>Headless</code>, <code>UserDataDirectory</code> 等字段）</li>
+<li>访问当前页面/BrowserContext/Browser：<code>Context.ActivePage</code>, <code>Context.BrowserContext</code>, <code>Context.Browser</code></li>
+</ul>
+</li>
+</ul>
+<p>八、如何从外部调用插件（WebAPI 示例）</p>
+<ul>
+<li>控制命令（start/stop/pause/resume）：</li>
+</ul>
+<p>POST /api/plugins/control</p>
+<p>Body JSON:</p>
+<pre><code class="lang-json">{
+    &quot;pluginId&quot;:&quot;com.example.hello&quot;,
+    &quot;command&quot;:&quot;start&quot;,
+    &quot;arguments&quot;: { &quot;someParam&quot;: &quot;value&quot; }
+}
+</code></pre>
+<ul>
+<li>调用动作（函数）示例：</li>
+</ul>
+<p>POST /api/plugins/run</p>
+<p>Body JSON:</p>
+<pre><code class="lang-json">{
+    &quot;pluginId&quot;:&quot;com.example.hello&quot;,
+    &quot;functionId&quot;:&quot;SayHello&quot;,
+    &quot;arguments&quot;: { &quot;name&quot;: &quot;Alice&quot;, &quot;times&quot;: &quot;3&quot; }
+}
+</code></pre>
+<p>注意：<code>arguments</code> 中所有值均为字符串（宿主负责转换到目标类型）。</p>
+<p>九、发现与元数据（UI 友好）</p>
+<ul>
+<li>主机会扫描插件程序集并通过 <code>PActionAttribute</code> 与 <code>PInputAttribute</code> 收集动作列表及参数元数据，供前端展示表单（包括 <code>InputType</code>, <code>Options</code> 列表、默认值、是否必填等）。
+<ul>
+<li>枚举参数会被展示为 <code>select</code>，选项由枚举成员名生成。</li>
+</ul>
+</li>
+</ul>
+<p>十、插件加载与隔离（重要）</p>
+<ul>
+<li>插件以可回收的 <code>AssemblyLoadContext</code> 加载（见 <code>PluginLoadContext</code>），但会把若干程序集视为共享并重用主机已加载的副本：
+<ul>
+<li><code>MeowAutoChrome.Contracts</code> 与 <code>Microsoft.Playwright</code>（以及 <code>Microsoft.Bcl.AsyncInterfaces</code>）被列为共享程序集。</li>
+</ul>
+</li>
+<li>因此：<strong>不要</strong>在插件发布包中包含 <code>MeowAutoChrome.Contracts.dll</code> 或 <code>Microsoft.Playwright.*</code> 的私有副本；否则会导致类型不兼容而被主机跳过。</li>
+</ul>
+<p>十一、包装与发布建议</p>
+<ul>
+<li>将插件作为单独的 Class Library 项目（<code>.csproj</code>）发布为 DLL，只包含插件自己的业务代码和资源。</li>
+<li>在开发时引用 <code>MeowAutoChrome.Contracts</code> 源或包（保持版本一致）。</li>
+<li>测试插件：将编译产物放入插件目录或通过 <code>POST /api/plugins/upload</code> 上传并调用 <code>/api/plugins/refresh</code> 或相关端点检查发现。</li>
+</ul>
+<p>十二、调试建议与常见问题</p>
+<ul>
+<li>插件未被发现或被跳过：确认 Contracts 版本一致、检查插件加载日志与 <code>PluginDiscoverySnapshot</code>。</li>
+<li>参数类型转换失败：确认传入参数为字符串且可转换为目标类型（例如枚举名称/数值、ISO 时间字符串等）。</li>
+<li>无法创建浏览器实例：查看 <code>BrowserCreationOptions</code> 字段（<code>UserDataDirectory</code> 的目录权限/路径限制、被禁止的 args、最大实例配额等）。</li>
+</ul>
+<p>附录：简短示例（完整）</p>
+<pre><code class="lang-csharp">using MeowAutoChrome.Contracts;
+using MeowAutoChrome.Contracts.Attributes;
+
+[Plugin(&quot;com.example.calc&quot;, &quot;Calculator Plugin&quot;, &quot;示例：接受参数并返回结果&quot;)]
+public class CalcPlugin : PluginBase
+{
+        [PAction(Name = &quot;Add Numbers&quot;)]
+        public IResult Add(
+                [PInput(Label = &quot;被加数&quot;, Required = true)] int a,
+                [PInput(Label = &quot;加数&quot;, Required = true)] int b)
+        {
+                return Result.Ok(new { Sum = a + b });
+        }
+
+        [PAction]
+        public async Task&lt;string&gt; Echo([PInput(Label = &quot;文本&quot;, Multiline = true, Rows = 4)] string text)
+        {
+                await Task.Delay(10);
+                return text;
+        }
+}
+</code></pre>
+<p>参考示例工程：<code>MeowAutoChrome.ExamplePlugin</code>。</p>
+<p>—— 结束 ——</p>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/RoslynMeow/MeowAutoChrome/blob/master/docs/PLUGINS.md/#L1" class="contribution-link">Edit this page</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+  
+<script>
+// MeowVersionSwitcher
+(function () {
+  try {
+    var path = window.location.pathname;
+    var m = path.match(/^(.*?)\/(latest|\d+\.\d+\.\d+(?:[-+][^\/]*)?)\//);
+    if (!m) {
+      return;
+    }
+
+    var base = m[1];
+    var current = m[2];
+    var rest = path.substring(m[0].length);
+    if (!rest) {
+      rest = 'index.html';
+    }
+
+    fetch(base + '/versions.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        if (!Array.isArray(list)) {
+          list = [];
+        }
+
+        var options = ['latest'].concat(
+          list.filter(function (v) { return v !== 'latest'; })
+        );
+
+        var select = document.createElement('select');
+        options.forEach(function (v) {
+          var o = document.createElement('option');
+          o.value = v;
+          o.textContent = v === 'latest' ? 'latest (最新)' : v;
+          if (v === current) {
+            o.selected = true;
+          }
+          select.appendChild(o);
+        });
+
+        select.addEventListener('change', function () {
+          window.location.href = base + '/' + select.value + '/' + rest;
+        });
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:fixed;top:8px;right:16px;z-index:9999;background:#fff;border:1px solid #c8c8c8;border-radius:4px;padding:2px 6px;box-shadow:0 1px 3px rgba(0,0,0,.12);';
+        wrap.appendChild(select);
+        document.body.appendChild(wrap);
+      })
+      .catch(function () {});
+  } catch (e) {
+    /* ignore */
+  }
+})();
+
+</script>
+</body>
+</html>

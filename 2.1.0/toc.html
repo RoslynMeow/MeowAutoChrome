@@ -1,0 +1,149 @@
+
+<div id="sidetoggle">
+  <div>
+    <div class="sidefilter">
+      <form class="toc-filter">
+        <span class="glyphicon glyphicon-filter filter-icon"></span>
+        <span class="glyphicon glyphicon-remove clear-icon" id="toc_filter_clear"></span>
+        <input type="text" id="toc_filter_input" placeholder="Filter by title" onkeypress="if(event.keyCode==13) {return false;}">
+      </form>
+    </div>
+    <div class="sidetoc">
+      <div class="toc" id="toc">
+
+          <ul class="nav level1">
+                <li>
+                    <a href="index.html" name="" title="首页">首页</a>
+                </li>
+                <li>
+                    <span class="expand-stub"></span>
+                    <a>快速开始</a>
+
+                    <ul class="nav level2">
+                          <li>
+                              <a href="docs/SETUP.html" name="" title="环境与依赖（SETUP）">环境与依赖（SETUP）</a>
+                          </li>
+                          <li>
+                              <a href="docs/USAGE.html" name="" title="运行与调试（USAGE）">运行与调试（USAGE）</a>
+                          </li>
+                    </ul>
+                </li>
+                <li>
+                    <span class="expand-stub"></span>
+                    <a>设计与实现</a>
+
+                    <ul class="nav level2">
+                          <li>
+                              <a href="docs/ARCHITECTURE.html" name="" title="系统架构（ARCHITECTURE）">系统架构（ARCHITECTURE）</a>
+                          </li>
+                          <li>
+                              <a href="docs/FOLDERS.html" name="" title="目录结构（FOLDERS）">目录结构（FOLDERS）</a>
+                          </li>
+                    </ul>
+                </li>
+                <li>
+                    <span class="expand-stub"></span>
+                    <a>插件开发</a>
+
+                    <ul class="nav level2">
+                          <li>
+                              <a href="docs/PLUGINS.html" name="" title="插件指南（PLUGINS）">插件指南（PLUGINS）</a>
+                          </li>
+                          <li>
+                              <a href="docs/API.html" name="" title="接口文档（API）">接口文档（API）</a>
+                          </li>
+                    </ul>
+                </li>
+                <li>
+                    <span class="expand-stub"></span>
+                    <a>支持</a>
+
+                    <ul class="nav level2">
+                          <li>
+                              <a href="docs/TROUBLESHOOTING.html" name="" title="常见问题（TROUBLESHOOTING）">常见问题（TROUBLESHOOTING）</a>
+                          </li>
+                          <li>
+                              <a href="docs/SECURITY.html" name="" title="安全说明（SECURITY）">安全说明（SECURITY）</a>
+                          </li>
+                    </ul>
+                </li>
+                <li>
+                    <span class="expand-stub"></span>
+                    <a>项目</a>
+
+                    <ul class="nav level2">
+                          <li>
+                              <a href="docs/CONTRIBUTING.html" name="" title="贡献准则（CONTRIBUTING）">贡献准则（CONTRIBUTING）</a>
+                          </li>
+                          <li>
+                              <a href="docs/RELEASE_PLAN.html" name="" title="发布计划（RELEASE_PLAN）">发布计划（RELEASE_PLAN）</a>
+                          </li>
+                          <li>
+                              <a href="docs/CHANGELOG.html" name="" title="变更日志（CHANGELOG）">变更日志（CHANGELOG）</a>
+                          </li>
+                          <li>
+                              <a href="README.html" name="" title="README">README</a>
+                          </li>
+                    </ul>
+                </li>
+          </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// MeowVersionSwitcher
+(function () {
+  try {
+    var path = window.location.pathname;
+    var m = path.match(/^(.*?)\/(latest|\d+\.\d+\.\d+(?:[-+][^\/]*)?)\//);
+    if (!m) {
+      return;
+    }
+
+    var base = m[1];
+    var current = m[2];
+    var rest = path.substring(m[0].length);
+    if (!rest) {
+      rest = 'index.html';
+    }
+
+    fetch(base + '/versions.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (list) {
+        if (!Array.isArray(list)) {
+          list = [];
+        }
+
+        var options = ['latest'].concat(
+          list.filter(function (v) { return v !== 'latest'; })
+        );
+
+        var select = document.createElement('select');
+        options.forEach(function (v) {
+          var o = document.createElement('option');
+          o.value = v;
+          o.textContent = v === 'latest' ? 'latest (最新)' : v;
+          if (v === current) {
+            o.selected = true;
+          }
+          select.appendChild(o);
+        });
+
+        select.addEventListener('change', function () {
+          window.location.href = base + '/' + select.value + '/' + rest;
+        });
+
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:fixed;top:8px;right:16px;z-index:9999;background:#fff;border:1px solid #c8c8c8;border-radius:4px;padding:2px 6px;box-shadow:0 1px 3px rgba(0,0,0,.12);';
+        wrap.appendChild(select);
+        document.body.appendChild(wrap);
+      })
+      .catch(function () {});
+  } catch (e) {
+    /* ignore */
+  }
+})();
+
+</script>
