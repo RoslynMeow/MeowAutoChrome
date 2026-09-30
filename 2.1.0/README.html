@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>主要组件 | MeowAutoChrome 文档 </title>
+      <title>MeowAutoChrome | MeowAutoChrome 文档 </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="主要组件 | MeowAutoChrome 文档 ">
+      <meta name="title" content="MeowAutoChrome | MeowAutoChrome 文档 ">
     
     
       <link rel="shortcut icon" href="favicon.ico">
@@ -19,7 +19,21 @@
     
     <meta property="docfx:rel" content="">
     
-  </head>
+  
+<style id="meow-docs-custom">
+#logo {
+    height: 34px;
+    width: auto;
+    max-height: 34px;
+    vertical-align: middle;
+}
+
+.navbar-brand {
+    padding: 8px 0;
+}
+
+</style>
+</head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
     <div id="wrapper">
       <header>
@@ -70,45 +84,144 @@
         <div class="article row grid">
           <div class="col-md-10">
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="主要组件">主要组件</h1>
+<h1 id="meowautochrome">MeowAutoChrome</h1>
 
+<blockquote>
+<p>基于 .NET 与 Electron 的 Chrome 自动化平台：多浏览器实例管理、可热插拔插件、实时画面与日志流。</p>
+</blockquote>
+<p><a href="https://roslynmeow.github.io/MeowAutoChrome/"><img src="https://img.shields.io/badge/docs-GitHub%20Pages-2ea44f?logo=github" alt="Docs"></a>
+<a href="https://github.com/RoslynMeow/MeowAutoChrome/actions/workflows/release.yml"><img src="https://github.com/RoslynMeow/MeowAutoChrome/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+<a href="https://github.com/RoslynMeow/MeowAutoChrome/releases"><img src="https://img.shields.io/github/v/release/RoslynMeow/MeowAutoChrome?display_name=tag" alt="Latest Release"></a>
+<a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet" alt=".NET"></a>
+<a href="LICENSE.txt"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License"></a></p>
+<p>MeowAutoChrome 将浏览器自动化能力拆分为「前端界面 + 后端服务 + 插件」三部分：Electron 提供桌面交互，WebAPI 暴露 HTTP / SignalR 接口，Core 负责业务逻辑、Playwright 运行时与插件主机。插件以可回收的 <code>AssemblyLoadContext</code> 动态加载，可实现热插拔与生命周期管理。</p>
+<h2 id="特性">特性</h2>
 <ul>
-<li>WebAPI（<a href="MeowAutoChrome.WebAPI">MeowAutoChrome.WebAPI</a>）：后端 HTTP API 与 SignalR Hub。</li>
-<li>Core（<a href="MeowAutoChrome.Core">MeowAutoChrome.Core</a>）：业务逻辑、Playwright 运行时管理、插件主机。</li>
-<li>Electron UI（<a href="MeowAutoChrome.Electron">MeowAutoChrome.Electron</a>）：桌面前端，通常与本地 WebAPI 配合运行。</li>
-<li>Contracts（<a href="MeowAutoChrome.Contracts">MeowAutoChrome.Contracts</a>）：插件接口、基类与 attribute 定义。</li>
-<li>ExamplePlugin（<a href="MeowAutoChrome.ExamplePlugin">MeowAutoChrome.ExamplePlugin</a>）：参考插件示例。</li>
+<li><strong>多实例浏览器管理</strong>：统一的实例创建/选择/关闭与生命周期控制，支持自定义 <code>UserDataDirectory</code>、Headless 等选项。</li>
+<li><strong>插件化架构</strong>：基于 <code>[Plugin]</code> / <code>[PAction]</code> / <code>[PInput]</code> 声明式契约，自动发现动作与参数并生成前端表单。</li>
+<li><strong>实时通信</strong>：通过 SignalR 推送插件输出、日志与画面流（Screencast）。</li>
+<li><strong>两种运行形态</strong>：Electron 桌面前端 + 独立可部署的 WebAPI 后端。</li>
+<li><strong>自动化流水线</strong>：合并到 <code>master</code> 自动生成多版本文档、推送 NuGet 包并打包 Release。</li>
 </ul>
-<p><strong>快速开始（开发）</strong>
-在 Windows PowerShell 执行：</p>
+<h2 id="项目结构">项目结构</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="MeowAutoChrome.WebAPI"><code>MeowAutoChrome.WebAPI</code></a></td>
+<td>后端 HTTP API 与 SignalR Hub</td>
+</tr>
+<tr>
+<td><a href="MeowAutoChrome.Core"><code>MeowAutoChrome.Core</code></a></td>
+<td>业务逻辑、Playwright 运行时管理、插件主机</td>
+</tr>
+<tr>
+<td><a href="MeowAutoChrome.Electron"><code>MeowAutoChrome.Electron</code></a></td>
+<td>Electron 桌面前端，与本地 WebAPI 配合运行</td>
+</tr>
+<tr>
+<td><a href="MeowAutoChrome.Contracts"><code>MeowAutoChrome.Contracts</code></a></td>
+<td>插件接口、基类与 attribute 定义（发布为 NuGet 包）</td>
+</tr>
+<tr>
+<td><a href="MeowAutoChrome.ExamplePlugin"><code>MeowAutoChrome.ExamplePlugin</code></a></td>
+<td>参考插件示例</td>
+</tr>
+</tbody>
+</table>
+<h2 id="快速开始">快速开始</h2>
+<p><strong>环境要求</strong>：.NET SDK 10、Node.js 20+、Windows PowerShell（脚本依赖）。</p>
 <pre><code class="lang-powershell"># 构建整个解决方案
 dotnet build MeowAutoChrome.slnx
 
 # 运行 WebAPI（开发）
 dotnet run --project MeowAutoChrome.WebAPI/MeowAutoChrome.WebAPI.csproj
 
-# 或使用仓库提供的脚本（通常自动协调服务）
+# 一键启动（发布 WebAPI 并拉起 Electron）
 .\dev.ps1
 
-# 打包示例脚本
+# 打包桌面应用（installer / dir / zip）
 .\pack.ps1
 </code></pre>
-<p>有关 Electron 命令请查看 <a href="MeowAutoChrome.Electron/package.json">MeowAutoChrome.Electron/package.json</a>。</p>
-<h2 id="文档结构">文档结构</h2>
-<ul>
-<li>README.md（本文件）：总体说明与快速上手。</li>
-<li>docs/ARCHITECTURE.md：系统架构、运行原理、组件交互。</li>
-<li>docs/FOLDERS.md：仓库各目录用途说明。</li>
-<li>docs/API.md：后端 HTTP 与 SignalR 使用说明与示例。</li>
-<li>docs/PLUGINS.md：插件开发、打包与加载规则。</li>
-<li>docs/SETUP.md：环境与依赖安装说明。</li>
-<li>docs/USAGE.md：运行、调试与打包流程。</li>
-<li>docs/TROUBLESHOOTING.md：常见问题与排查步骤。</li>
-<li>docs/CONTRIBUTING.md：贡献准则与发布流程。</li>
-<li>docs/RELEASE_PLAN.md：发布检查表与步骤。</li>
-<li>docs/SECURITY.md：安全与依赖管理建议。</li>
-</ul>
-<p>继续阅读目录下的其它文档以获取详细信息。</p>
+<p>Electron 相关命令见 <a href="MeowAutoChrome.Electron/package.json"><code>MeowAutoChrome.Electron/package.json</code></a>。</p>
+<h2 id="插件开发">插件开发</h2>
+<p>插件引用 <a href="MeowAutoChrome.Contracts"><code>MeowAutoChrome.Contracts</code></a>（保持版本一致），用 attribute 声明动作与参数：</p>
+<pre><code class="lang-csharp">using MeowAutoChrome.Contracts;
+using MeowAutoChrome.Contracts.Attributes;
+
+[Plugin(&quot;com.example.hello&quot;, &quot;Hello Plugin&quot;, &quot;示例插件&quot;)]
+public class HelloPlugin : PluginBase
+{
+    [PAction(Name = &quot;Say Hello&quot;, Description = &quot;返回问候文本&quot;)]
+    public IResult SayHello([PInput(Label = &quot;名字&quot;, Required = true)] string name)
+        =&gt; Result.Ok(new { Text = $&quot;Hello {name}&quot; });
+}
+</code></pre>
+<blockquote>
+<p>注意：插件发布包中<strong>不要</strong>包含 <code>MeowAutoChrome.Contracts.dll</code> 或 <code>Microsoft.Playwright.*</code>，它们由主机共享。</p>
+</blockquote>
+<p>详见 <a href="docs/PLUGINS.html">插件指南</a>。</p>
+<h2 id="文档">文档</h2>
+<p>完整文档（多版本，支持切换）：<strong><a href="https://roslynmeow.github.io/MeowAutoChrome/">https://roslynmeow.github.io/MeowAutoChrome/</a></strong></p>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="docs/SETUP.html">SETUP</a></td>
+<td>环境与依赖安装</td>
+</tr>
+<tr>
+<td><a href="docs/USAGE.html">USAGE</a></td>
+<td>运行、调试与常用命令</td>
+</tr>
+<tr>
+<td><a href="docs/ARCHITECTURE.html">ARCHITECTURE</a></td>
+<td>系统架构与组件交互</td>
+</tr>
+<tr>
+<td><a href="docs/FOLDERS.html">FOLDERS</a></td>
+<td>仓库目录说明</td>
+</tr>
+<tr>
+<td><a href="docs/PLUGINS.html">PLUGINS</a></td>
+<td>插件开发与加载规则</td>
+</tr>
+<tr>
+<td><a href="docs/API.html">API</a></td>
+<td>HTTP 与 SignalR 接口说明</td>
+</tr>
+<tr>
+<td><a href="docs/TROUBLESHOOTING.html">TROUBLESHOOTING</a></td>
+<td>常见问题排查</td>
+</tr>
+<tr>
+<td><a href="docs/CONTRIBUTING.html">CONTRIBUTING</a></td>
+<td>贡献准则</td>
+</tr>
+<tr>
+<td><a href="docs/SECURITY.html">SECURITY</a></td>
+<td>安全与依赖管理</td>
+</tr>
+</tbody>
+</table>
+<h2 id="分发">分发</h2>
+<p><code>MeowAutoChrome.Contracts</code> 作为 NuGet 包发布到 <a href="https://github.com/RoslynMeow?tab=packages">GitHub Packages</a>。</p>
+<pre><code class="lang-powershell">dotnet add package MeowAutoChrome.Contracts --source &quot;https://nuget.pkg.github.com/RoslynMeow/index.json&quot;
+</code></pre>
+<h2 id="贡献">贡献</h2>
+<p>欢迎提交 Issue 与 PR。开发分支为 <code>dev</code>，功能完成后合并至 <code>master</code>。请先阅读 <a href="docs/CONTRIBUTING.html">贡献准则</a> 与 <a href="CODE_OF_CONDUCT.md">行为准则</a>。</p>
+<h2 id="许可证">许可证</h2>
+<p>本项目采用 <a href="LICENSE.txt">GPL-3.0-or-later</a> 许可。</p>
 
 </article>
           </div>
