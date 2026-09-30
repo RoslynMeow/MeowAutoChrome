@@ -1,0 +1,33 @@
+{
+  "build": {
+    "content": [
+      {
+        "files": [
+          "index.md",
+          "README.md",
+          "toc.yml",
+          "docs/*.md"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "favicon.ico",
+          "icon.png"
+        ]
+      }
+    ],
+    "dest": "_site",
+    "template": [
+      "default"
+    ],
+    "globalMetadata": {
+      "_appName": "MeowAutoChrome",
+      "_appTitle": "MeowAutoChrome 文档",
+      "_enableSearch": true,
+      "_appLogoPath": "icon.png",
+      "_appFaviconPath": "favicon.ico"
+    }
+  }
+}

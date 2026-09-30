@@ -1,0 +1,36 @@
+- name: 首页
+  href: index.md
+- name: 快速开始
+  items:
+    - name: 环境与依赖（SETUP）
+      href: docs/SETUP.md
+    - name: 运行与调试（USAGE）
+      href: docs/USAGE.md
+- name: 设计与实现
+  items:
+    - name: 系统架构（ARCHITECTURE）
+      href: docs/ARCHITECTURE.md
+    - name: 目录结构（FOLDERS）
+      href: docs/FOLDERS.md
+- name: 插件开发
+  items:
+    - name: 插件指南（PLUGINS）
+      href: docs/PLUGINS.md
+    - name: 接口文档（API）
+      href: docs/API.md
+- name: 支持
+  items:
+    - name: 常见问题（TROUBLESHOOTING）
+      href: docs/TROUBLESHOOTING.md
+    - name: 安全说明（SECURITY）
+      href: docs/SECURITY.md
+- name: 项目
+  items:
+    - name: 贡献准则（CONTRIBUTING）
+      href: docs/CONTRIBUTING.md
+    - name: 发布计划（RELEASE_PLAN）
+      href: docs/RELEASE_PLAN.md
+    - name: 变更日志（CHANGELOG）
+      href: docs/CHANGELOG.md
+    - name: README
+      href: README.md

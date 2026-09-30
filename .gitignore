@@ -365,7 +365,10 @@ FodyWeavers.xsd
 /MeowAutoChrome.Web/user_data
 /NDependOut
 *.ndproj
-/.github
 /Artifact
+/_site
+/nupkg
+/gh-pages
+/pages-root
 /MeowAutoChrome.Electron/webapi
 chrome-win64.zip

@@ -17,11 +17,11 @@
     <NeutralLanguage>zh-CN</NeutralLanguage>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <PackageProjectUrl>https://github.com/DavidSciMeow/MeowAutoChrome</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/DavidSciMeow/MeowAutoChrome</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/RoslynMeow/MeowAutoChrome</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/RoslynMeow/MeowAutoChrome</RepositoryUrl>
     <PackageIcon>icon.png</PackageIcon>
     <Title>MeowAutoChrome.Contracts</Title>
-    <Authors>DavidSciMeow</Authors>
+    <Authors>RoslynMeow</Authors>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,0 +1,97 @@
+name: Docs (GitHub Pages)
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Checkout existing gh-pages
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install DocFX
+        run: dotnet tool install -g docfx
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          version="$(grep -oPm1 '(?<=<Version>)[^<]+' MeowAutoChrome.Contracts/MeowAutoChrome.Contracts.csproj)"
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+          echo "Doc version: $version"
+
+      - name: Build docs
+        run: docfx docfx.json
+
+      - name: Inject version switcher
+        run: python .github/scripts/inject_version_switcher.py _site .github/pages-root/version-switcher.js
+
+      - name: Prepare version list
+        id: versions
+        shell: bash
+        run: |
+          current='${{ steps.version.outputs.value }}'
+          versions=""
+          if [ -d gh-pages ]; then
+            versions="$(ls gh-pages | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true)"
+          fi
+          versions="$(printf '%s\n%s\n' "$versions" "$current" \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -uVr)"
+          json="$(printf '%s\n' "$versions" | grep -v '^$' | sed 's/.*/"&"/' | paste -sd, -)"
+          echo "json=[${json}]" >> "$GITHUB_OUTPUT"
+          echo "Versions: [${json}]"
+
+      - name: Deploy versioned docs
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          destination_dir: ${{ steps.version.outputs.value }}
+          keep_files: true
+
+      - name: Deploy latest docs
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          destination_dir: latest
+          keep_files: true
+
+      - name: Prepare root site
+        shell: bash
+        run: |
+          mkdir -p pages-root
+          cp .github/pages-root/index.html pages-root/index.html
+          cp .github/pages-root/version-switcher.js pages-root/version-switcher.js
+          printf '%s\n' '${{ steps.versions.outputs.json }}' > pages-root/versions.json
+          touch pages-root/.nojekyll
+
+      - name: Deploy root site
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pages-root
+          keep_files: true

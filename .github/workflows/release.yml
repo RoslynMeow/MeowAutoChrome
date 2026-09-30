@@ -1,0 +1,64 @@
+name: Release (Windows)
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$csproj = Get-Content 'MeowAutoChrome.Contracts/MeowAutoChrome.Contracts.csproj'
+          $version = ($csproj.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ } | Select-Object -First 1)
+          if (-not $version) { throw 'Version not found in Contracts.csproj' }
+          "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          Write-Host "Release version: $version"
+
+      - name: Publish WebAPI into Electron
+        run: dotnet publish MeowAutoChrome.WebAPI/MeowAutoChrome.WebAPI.csproj -c Release -r win-x64 --self-contained false -o MeowAutoChrome.Electron/webapi
+
+      - name: Install Electron dependencies
+        working-directory: MeowAutoChrome.Electron
+        run: npm ci
+
+      - name: Set Electron version
+        working-directory: MeowAutoChrome.Electron
+        shell: pwsh
+        run: npm version "${{ steps.version.outputs.value }}" --no-git-tag-version --allow-same-version
+
+      - name: Build installer
+        working-directory: MeowAutoChrome.Electron
+        run: npm run dist
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.value }}
+          name: v${{ steps.version.outputs.value }}
+          generate_release_notes: true
+          make_latest: true
+          overwrite_files: true
+          files: |
+            Artifact/Electron/*.exe
+            Artifact/Electron/*.zip
