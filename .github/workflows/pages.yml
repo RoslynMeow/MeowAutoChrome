@@ -47,8 +47,8 @@ jobs:
       - name: Build docs
         run: docfx docfx.json
 
-      - name: Inject version switcher
-        run: python .github/scripts/inject_version_switcher.py _site .github/pages-root/version-switcher.js
+      - name: Inject site extras
+        run: python .github/scripts/inject_site_extras.py _site .github/pages-root/custom.css .github/pages-root/version-switcher.js
 
       - name: Assemble site
         shell: bash
